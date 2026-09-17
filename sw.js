@@ -1,4 +1,4 @@
-const CACHE='quad-quest-v1';
+const CACHE='quad-quest-v2';
 // The shared shell is followed by this chapter's geometry-specific visual layer.
 const ASSETS=['./','./index.html','./css/style.css','./js/app.js','./js/dom.js','./js/content.js','./js/state.js','./js/math.js','./js/effects.js','./js/visuals.js','./js/puzzles.js','./js/labs.js','./manifest.webmanifest','./icons/icon.svg','./icons/icon-192.png','./icons/icon-512.png'];
 ASSETS.push('./css/geometry.css');
