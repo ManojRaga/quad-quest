@@ -1,0 +1,9 @@
+{
+  "name": "quad-quest",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A hands-on Class 8 geometry adventure through Chapter 4: Quadrilaterals.",
+  "scripts": {"start":"node scripts/serve.mjs","test":"node --test tests/*.test.mjs","android:sync":"cap sync android","deploy":"sh scripts/deploy-pages.sh"},
+  "dependencies": {"@capacitor/android":"8.5.0","@capacitor/cli":"8.5.0","@capacitor/core":"8.5.0"}
+}
