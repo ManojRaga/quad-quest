@@ -11,6 +11,7 @@ await mkdir('test-results',{recursive:true});
 const shot=name=>page.screenshot({path:`test-results/${name}.png`,fullPage:true});
 const heading=title=>page.getByRole('heading',{name:title,exact:true}).waitFor();
 async function noOverflow(){const result=await page.evaluate(()=>({ok:document.documentElement.scrollWidth<=innerWidth+1,width:innerWidth,scroll:document.documentElement.scrollWidth,offenders:[...document.querySelectorAll('main *,header *,footer *')].filter(e=>e.getBoundingClientRect().right>innerWidth+1).map(e=>({tag:e.tagName,cls:e.className?.baseVal??e.className,right:e.getBoundingClientRect().right})).slice(0,15)}));assert.ok(result.ok,JSON.stringify(result));}
+async function heroSpacing(){if(await page.locator('.hero h1').count()){assert.ok(await page.evaluate(()=>{if(innerWidth>700)return true;const bottom=document.querySelector('.hero h1').getBoundingClientRect().bottom;return [...document.querySelectorAll('.geometry-hero>.geometry-tag,.geometry-hero>.hero-frame')].every(e=>e.getBoundingClientRect().top>bottom+5);}), 'Hero artwork must clear the headline');}}
 async function setDial(label,n){const input=page.getByRole('slider',{name:label,exact:true});const min=Number(await input.getAttribute('min')),step=Number(await input.getAttribute('step'))||1;await input.focus();await input.press('Home');for(let i=min;i<n;i+=step)await input.press('ArrowRight');assert.equal(await input.inputValue(),String(n));}
 async function solve(q){
   if(q.type==='choice')await page.getByRole('button',{name:q.answer,exact:true}).click();
@@ -26,7 +27,7 @@ async function solve(q){
 }
 try{
   await page.goto(base);await heading(/Four sides/);await shot('desktop-home');await noOverflow();
-  await page.setViewportSize({width:Number(arg('width'))||390,height:844});await shot('mobile-home');await noOverflow();
+  await page.setViewportSize({width:Number(arg('width'))||390,height:844});await shot('mobile-home');await noOverflow();await heroSpacing();
   assert.equal(await page.locator('.world-card:disabled').count(),4);
   await page.getByRole('button',{name:'Start your adventure',exact:true}).click();await page.getByRole('button',{name:'Let’s build',exact:true}).click();await heading(WORLDS[0].rounds[0].title);await shot('mobile-square');
   if(process.argv.includes('--full')){
@@ -60,13 +61,13 @@ try{
   await page.getByRole('button',{name:'Play lab',exact:true}).click();await page.getByLabel('Moving vertex',{exact:true}).selectOption('2');await page.getByRole('button',{name:'Peg 1, 1',exact:true}).click();assert.ok((await page.locator('.lab-panel').innerText()).includes('distinct'));
   await page.getByRole('button',{name:'Reset the geoboard',exact:true}).click();await page.getByLabel('Moving vertex',{exact:true}).selectOption('2');await page.getByLabel('Horizontal coordinate',{exact:true}).selectOption('4');assert.equal(await page.getByLabel('Horizontal coordinate',{exact:true}).inputValue(),'4');await shot('free-geoboard');
   await page.getByRole('button',{name:'Diagonal rig',exact:true}).click();await setDial('Crossing angle',90);assert.ok((await page.locator('.diagonal-rig').innerText()).includes('Square'));await setDial('BD length',8);assert.ok((await page.locator('.diagonal-rig').innerText()).includes('Rhombus'));assert.ok(!(await page.locator('.diagonal-rig').innerText()).includes('Square'));await shot('diagonal-lab');
-  await page.getByRole('button',{name:'Shape families',exact:true}).click();await page.getByLabel('Example shape',{exact:true}).selectOption('concave');assert.ok((await page.locator('.family-properties').innerText()).includes('360°'));assert.equal(await page.locator('.family-table td').filter({hasText:/^Yes$/}).count(),2);await shot('family-lab');
+  await page.getByRole('button',{name:'Shape families',exact:true}).click();await page.getByLabel('Example shape',{exact:true}).selectOption('concave');assert.ok((await page.locator('.family-properties').innerText()).includes('360°'));assert.equal(await page.locator('.family-table td').filter({hasText:/^Yes$/}).count(),2);assert.equal(await page.locator('.family-stage line[opacity]').count(),1);await shot('family-lab');
   const scope=await page.evaluate(async()=>(await navigator.serviceWorker.ready).scope);assert.equal(scope,new URL('./',base).href);
   await context.setOffline(true);await page.reload();await heading('The geometry playground.');await page.getByRole('button',{name:'Free geoboard',exact:true}).waitFor();
   console.log('✓ All three labs, field notes, correct service-worker scope and offline reload');
   await context.setOffline(false);
   for(const width of [320,768]){
-    await page.setViewportSize({width,height:1000});await page.getByRole('button',{name:'Adventure',exact:true}).click();await noOverflow();await shot(`home-${width}`);
+    await page.setViewportSize({width,height:1000});await page.getByRole('button',{name:'Adventure',exact:true}).click();await noOverflow();await heroSpacing();await shot(`home-${width}`);
   }
   await page.getByRole('button',{name:'Adventure settings',exact:true}).click();await page.getByLabel('Classroom mode').check();await page.getByRole('button',{name:'Done',exact:true}).click();await page.locator('.settings-dialog').waitFor({state:'detached'});await page.locator('.classroom-banner').waitFor();assert.equal(await page.locator('.world-card:disabled').count(),0);
   await page.getByRole('button',{name:'Adventure settings',exact:true}).click();await page.getByRole('button',{name:'Reset this device’s progress',exact:true}).click();await page.getByRole('button',{name:'Keep my progress',exact:true}).click();await page.getByRole('button',{name:'Close settings',exact:true}).click();

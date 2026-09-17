@@ -35,7 +35,7 @@ All activity text and artwork are original. The supplied textbook PDF is not dis
 - A square belongs to both the rectangle and rhombus families. Family selection requires every applicable name.
 - Quadrilaterals have four distinct vertices, no crossed sides and no straight-through corners. Concave shapes are allowed; their interior angles include a reflex angle and sum to 360°.
 - Equal diagonals alone do **not** imply a rectangle. In the diagonal rig both diagonals always bisect each other; with that condition, equal lengths give a rectangle and perpendicular diagonals give a rhombus.
-- Computed diagrams use actual coordinates. Angle exercises whose drawings are schematic explicitly say **not to scale**. Displayed measurements are rounded; classification uses the underlying coordinates.
+- Computed diagrams use actual coordinates. Angle exercises whose drawings are schematic explicitly say **not to scale**. For concave shapes, perpendicularity refers to the lines containing the diagonals; a dotted extension shows where they meet. Displayed measurements are rounded; classification uses the underlying coordinates.
 
 ## Learning controls
 
@@ -45,7 +45,7 @@ All activity text and artwork are original. The supplied textbook PDF is not dis
 - Correct answers save immediately. Unanswered activities restart on return, preserving whether help was used; partially arranged controls are not saved.
 - **Settings → Classroom mode** opens all studios for the current page session. Resetting progress requires confirmation.
 - Keyboard controls, visible focus, descriptive labels, coordinate selectors and reduced-motion preferences are supported. Sound is optional.
-- **Free geoboard:** move any vertex and inspect family membership, sides, angles and diagonals.
+- **Free geoboard:** move any vertex and inspect family membership, angles and diagonal lengths.
 - **Diagonal rig:** vary a diagonal’s length and crossing angle while both midpoints remain fixed.
 - **Shape families:** inspect nine examples, including a concave kite and an equal-diagonal counterexample, with a full membership table.
 
