@@ -1,0 +1,28 @@
+import {h,svg} from './dom.js';
+import {analyse,SHAPES,midpoint,pretty} from './math.js';
+const text=(s,attrs)=>svg('text',attrs,document.createTextNode(String(s)));
+export function icon(name,size=22){
+ const paths={map:'M3 5l6-2 6 2 6-2v16l-6 2-6-2-6 2z M9 3v16 M15 5v16',book:'M12 5c-3-3-7-3-10-2v16c4-1 7-1 10 2 3-3 6-3 10-2V3c-3-1-7-1-10 2z M12 5v16',flask:'M9 2h6 M10 2v7L4 19q-1 3 3 3h10q4 0 3-3L14 9V2 M7 15h10',sound:'M3 9h4l5-5v16l-5-5H3z M16 8q5 4 0 8 M19 5q8 7 0 14',mute:'M3 9h4l5-5v16l-5-5H3z M17 9l5 6 M22 9l-5 6',lock:'M6 10V7a6 6 0 0 1 12 0v3 M4 10h16v12H4z',arrow:'M4 12h16 M14 6l6 6-6 6',back:'M20 12H4 M10 6l-6 6 6 6',check:'M4 12l5 5L20 6',close:'M6 6l12 12 M18 6L6 18',bulb:'M8 17c0-3-4-4-4-8a8 8 0 0 1 16 0c0 4-4 5-4 8z M9 21h6',settings:'M4 6h16 M4 12h16 M4 18h16 M8 3v6 M16 9v6 M10 15v6',bolt:'M4 5h16v14H4z M4 5l16 14 M20 5 4 19'};
+ return svg('svg',{viewBox:'0 0 24 24',width:size,height:size,fill:'none',stroke:'currentColor','stroke-width':1.7,'stroke-linecap':'round','stroke-linejoin':'round','aria-hidden':'true'},svg('path',{d:paths[name]||paths.bolt}));
+}
+function crossing(p){const [a,b,c,d]=p,u=[c[0]-a[0],c[1]-a[1]],v=[d[0]-b[0],d[1]-b[1]],den=u[0]*v[1]-u[1]*v[0];if(Math.abs(den)<1e-9)return null;const t=((b[0]-a[0])*v[1]-(b[1]-a[1])*v[0])/den;return [a[0]+t*u[0],a[1]+t*u[1]];}
+export function quad(points,opts={}){
+ const size=opts.grid?360:440,height=opts.grid?360:260,pad=45;
+ const xs=points.map(p=>p[0]),ys=points.map(p=>p[1]),minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys),scale=Math.min((size-pad*2)/Math.max(maxX-minX,1),(height-pad*2)/Math.max(maxY-minY,1));
+ const project=opts.grid?p=>[30+p[0]*50,330-p[1]*50]:p=>[size/2+(p[0]-(maxX+minX)/2)*scale,height/2-(p[1]-(maxY+minY)/2)*scale];
+ const pts=points.map(project),info=analyse(points),center=pts.reduce((a,b)=>[a[0]+b[0]/4,a[1]+b[1]/4],[0,0]);
+ const s=svg('svg',{viewBox:`0 0 ${size} ${height}`,class:`quad-diagram ${opts.grid?'on-grid':''}`,role:'img','aria-label':opts.label||`Quadrilateral ABCD${info.valid?`. ${info.families.join(', ')}`:'. Invalid or incomplete configuration'}`});
+ if(opts.grid)for(let i=0;i<=6;i++){s.append(svg('line',{x1:30+i*50,y1:30,x2:30+i*50,y2:330,class:'grid-line'}),svg('line',{x1:30,y1:30+i*50,x2:330,y2:30+i*50,class:'grid-line'}),text(i,{x:30+i*50,y:352,class:'axis-label','text-anchor':'middle'}),text(i,{x:10,y:334-i*50,class:'axis-label','text-anchor':'middle'}));}
+ s.append(svg('polygon',{points:pts.map(p=>p.join(',')).join(' '),class:`quad-face ${!info.valid?'invalid-face':''}`}));
+ if((opts.diagonal&&opts.diagonal!=='bd')||opts.diagonals)s.append(svg('line',{x1:pts[0][0],y1:pts[0][1],x2:pts[2][0],y2:pts[2][1],class:'diagonal diagonal-one'}));
+ if(opts.diagonals||opts.diagonal==='bd')s.append(svg('line',{x1:pts[1][0],y1:pts[1][1],x2:pts[3][0],y2:pts[3][1],class:'diagonal diagonal-two'}));
+ if(opts.midpoint&&opts.diagonals){const o=crossing(points);if(o){const [x,y]=project(o);s.append(svg('circle',{cx:x,cy:y,r:4,class:'cross-point'}),text('O',{x:x+10,y:y+16,class:'vertex-label'}));}}
+ if(info.valid&&opts.rightMarks!==false)for(let i=0;i<4;i++)if(Math.abs(info.angles[i]-90)<1e-6){const p=pts[i],prev=pts[(i+3)%4],next=pts[(i+1)%4],unit=q=>{const len=Math.hypot(q[0]-p[0],q[1]-p[1]);return [(q[0]-p[0])/len*11,(q[1]-p[1])/len*11];},u=unit(prev),v=unit(next);s.append(svg('polyline',{points:`${p[0]+u[0]},${p[1]+u[1]} ${p[0]+u[0]+v[0]},${p[1]+u[1]+v[1]} ${p[0]+v[0]},${p[1]+v[1]}`,class:'right-mark'}));}
+ pts.forEach((p,i)=>{const name='ABCD'[i],dx=p[0]-center[0],dy=p[1]-center[1],len=Math.hypot(dx,dy)||1;s.append(svg('circle',{cx:p[0],cy:p[1],r:opts.grid?6:4.5,class:'vertex-dot'}));if(opts.labels!==false)s.append(text(name,{x:p[0]+dx/len*19,y:p[1]+dy/len*19+5,'text-anchor':'middle',class:'vertex-label'}));if(opts.angleLabels?.[name])s.append(text(opts.angleLabels[name],{x:p[0]*.72+center[0]*.28,y:p[1]*.72+center[1]*.28+5,'text-anchor':'middle',class:'angle-label'}));});
+ return s;
+}
+export function visual(v){if(!v)return null;if(v.kind==='formula')return h('div',{class:'formula-art'},h('strong',{},v.text),h('p',{},v.caption));return h('div',{class:'diagram geometry-paper'},quad(v.points,v),v.caption?h('p',{class:'diagram-caption'},v.caption):null);}
+export function measurements(points){const a=analyse(points);if(!a.valid)return h('p',{class:'invalid-note',role:'status'},'Keep four distinct corners, no crossed sides, and no three corners in a straight line.');return h('div',{class:'measurements'},h('div',{},h('span',{},'INTERIOR ANGLES'),h('b',{},a.angles.map(n=>`${pretty(n)}°`).join(' · '))),h('div',{},h('span',{},'DIAGONALS'),h('b',{},`${pretty(a.diagonals[0])} and ${pretty(a.diagonals[1])}`)),h('p',{},'Measurements rounded to 1 decimal. Classification uses the unrounded geometry.'));}
+export function familyChips(points){const a=analyse(points);return h('div',{class:'family-chips','aria-live':'polite'},a.valid?a.families.map(f=>h('span',{},f)):h('span',{},'Not a simple quadrilateral yet'));}
+export function workshopArt(id){const key={frame:'rectangle',parallel:'parallelogram',diamond:'rhombus',kite:'kite',architect:'square'}[id];return quad(SHAPES[key],{diagonals:id!=='parallel',labels:false,rightMarks:id==='frame'||id==='architect'});}
+export function heroArt(){return h('div',{class:'geometry-hero','aria-hidden':'true'},h('div',{class:'draft-grid'}),h('div',{class:'hero-frame'},quad(SHAPES.rectangle,{diagonals:true,midpoint:true})),h('div',{class:'hero-diamond'},quad(SHAPES.rhombus,{diagonals:true,labels:false})),h('span',{class:'geometry-tag tag-angle'},'90°'),h('span',{class:'geometry-tag tag-parallel'},'∥'),h('span',{class:'draft-label'},'DRAW IT. TEST IT. UNDERSTAND IT.'));}
