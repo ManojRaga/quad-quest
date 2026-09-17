@@ -82,7 +82,7 @@ Before changing web content, **increment the cache version in `www/sw.js`**. Reb
 npm run deploy
 ```
 
-The script requires a clean working tree, runs the unit tests, builds the subtree branch and pushes both branches atomically without force-pushing.
+The script requires a clean working tree and an authenticated GitHub CLI (`gh`). It runs the unit tests, builds the subtree branch, pushes both branches atomically without force-pushing, and explicitly queues a Pages build.
 
 ## Verification
 
